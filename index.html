@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Reference</title>
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#141922; --line:#242c3a;
+    --fg:#eef2f8; --dim:#7c8798; --accent:#5aa9ff;
+    --ok:#3ddc84; --warn:#ffb020; --bad:#ff5f56;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg); color:var(--fg);
+    font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,sans-serif;
+    display:flex; flex-direction:column; overflow:hidden;
+    -webkit-text-size-adjust:100%; overscroll-behavior:none}
+
+  /* ---------- menu ---------- */
+  #menu{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+        padding:22px 20px 40px; display:flex; flex-direction:column; gap:26px}
+  #menu h1{font-size:13px; letter-spacing:.22em; text-transform:uppercase;
+           color:var(--dim); font-weight:600}
+  .grp h2{font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+          color:var(--accent); margin-bottom:10px; font-weight:600}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px;
+        padding:13px 15px; text-align:left; color:var(--fg); cursor:pointer;
+        display:flex; flex-direction:column; gap:5px;
+        -webkit-tap-highlight-color:transparent; touch-action:manipulation}
+  .card:active{background:#1b2230}
+  .card:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .card .id{font:600 11px/1 "SF Mono",ui-monospace,Menlo,monospace;
+            color:var(--dim); letter-spacing:.06em}
+  .card .ti{font-size:15px; font-weight:600; line-height:1.25}
+  .card .mt{font-size:11px; color:var(--dim); font-variant-numeric:tabular-nums}
+
+  /* ---------- prompter ---------- */
+  #run{flex:1; display:none; flex-direction:column; min-height:0}
+  #run.on{display:flex}
+  .clocks{display:flex; gap:1px; background:var(--line); border-bottom:1px solid var(--line)}
+  .clock{flex:1; background:var(--panel); padding:8px 14px; min-width:0}
+  .clock .k{font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim)}
+  .clock .v{font:600 26px/1.1 "SF Mono",ui-monospace,Menlo,monospace;
+            font-variant-numeric:tabular-nums}
+  .clock .s{font-size:11px; color:var(--dim); min-height:14px}
+  #taskClock .v{color:var(--bad)}
+  #taskClock.cleared .v{color:var(--ok)}
+  #drift .v.ahead{color:var(--accent)} #drift .v.behind{color:var(--warn)}
+  #beatBar{height:5px;background:var(--line)}
+  #beatFill{height:100%;background:var(--accent);width:0}
+  #beatFill.over{background:var(--warn)}
+
+  main{flex:1; display:flex; flex-direction:column; padding:16px 40px; gap:10px; min-height:0}
+  .phase{font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent);
+         display:flex; justify-content:space-between; align-items:center; gap:12px}
+  .phase b{color:var(--dim); font-weight:400}
+  #back{background:none; border:1px solid var(--line); color:var(--dim);
+        border-radius:8px; padding:4px 10px; font-size:11px; letter-spacing:.1em;
+        text-transform:uppercase; cursor:pointer; touch-action:manipulation}
+  #back:active{background:var(--panel)}
+  .do{display:flex; gap:16px; align-items:baseline}
+  .num{font:700 28px/1 "SF Mono",ui-monospace,Menlo,monospace; color:var(--dim);
+       font-variant-numeric:tabular-nums}
+  .txt{font-size:26px; font-weight:600; letter-spacing:-.01em}
+
+  .saywrap{flex:1; display:flex; flex-direction:column; justify-content:center; gap:14px;
+           min-height:0; overflow:hidden; border-left:3px solid var(--accent); padding-left:20px}
+  .sayline{font-size:34px; line-height:1.34; transition:opacity .25s ease}
+  .sayline.done{opacity:.28} .sayline.ahead{opacity:.42} .sayline.live{opacity:1}
+  .sayline .w{color:#5d6878; transition:color .12s linear}
+  .sayline .w.said{color:#dfe7f2}
+  .sayline .w.now{color:#fff; box-shadow:inset 0 -.14em 0 var(--accent)}
+  .sayline em{font-style:normal; font-weight:700}
+  .sayline em .w.said,.sayline em .w.now{color:#fff}
+  .sayline.q{color:var(--dim); font-size:22px; opacity:.75}
+  .sayline.q .w{color:var(--dim)}
+
+  .foot2{display:flex; gap:22px; align-items:baseline; flex-wrap:wrap}
+  .rest{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim)}
+  .next{font-size:17px; color:var(--dim)}
+  .next .n{font-family:"SF Mono",ui-monospace,Menlo,monospace}
+  .pace{font-size:12px; color:var(--dim)} .pace b{color:var(--fg); font-weight:600}
+  #gate{display:none; font-size:17px; color:var(--warn); font-weight:600}
+  #gate.show{display:block}
+
+  footer{border-top:1px solid var(--line); background:var(--panel); padding:8px 16px;
+         display:flex; justify-content:space-between; font-size:12px; color:var(--dim)}
+  kbd{background:var(--line); border-radius:4px; padding:1px 6px;
+      font-family:"SF Mono",ui-monospace,Menlo,monospace; color:var(--fg)}
+  #state{font-weight:600}
+  #state.run{color:var(--ok)} #state.pause{color:var(--warn)}
+  #auto.on{color:var(--ok); font-weight:600}
+
+  #touch{display:none; gap:10px; padding:10px 14px calc(16px + env(safe-area-inset-bottom));
+         background:var(--panel); border-top:1px solid var(--line)}
+  #touch button{flex:1; min-height:56px; font-size:17px; font-weight:600; color:var(--fg);
+    background:#1b2230; border:1px solid var(--line); border-radius:12px;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation}
+  #touch button:active{background:#243044}
+  #touch button.wide{flex:1.6}
+  #touch button.run{background:var(--accent); border-color:var(--accent); color:#08111c}
+  #touch .sm{flex:.55; font-size:20px; font-weight:400}
+
+  @media (max-width:760px){
+    body{user-select:none; -webkit-user-select:none}
+    #menu{padding:16px 14px 30px; gap:20px}
+    .grid{grid-template-columns:1fr; gap:8px}
+    .clocks{flex-wrap:wrap}
+    .clock{flex:1 1 46%; padding:6px 12px}
+    .clock .v{font-size:20px} .clock .s{font-size:10px}
+    main{padding:12px 16px; gap:8px}
+    .num{font-size:19px} .txt{font-size:18px}
+    .saywrap{padding-left:13px; gap:10px; justify-content:flex-start}
+    .sayline{font-size:clamp(19px,5.2vw,30px); line-height:1.3}
+    .sayline.q{font-size:15px}
+    .next{font-size:14px} .pace{font-size:11px}
+    #touch{display:flex} footer{display:none}
+  }
+  @media (max-width:760px) and (orientation:landscape){
+    .clock .v{font-size:16px}
+    .sayline{font-size:clamp(17px,3.4vw,26px)}
+    #touch button{min-height:44px}
+  }
+  @media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+
+<div id="menu"></div>
+
+<div id="run">
+  <div class="clocks">
+    <div class="clock"><div class="k">Beat</div><div class="v" id="beatV">0:00</div><div class="s" id="beatS"></div></div>
+    <div class="clock" id="taskClock"><div class="k">Task clock</div><div class="v" id="taskV">0:00</div><div class="s" id="taskS"></div></div>
+    <div class="clock"><div class="k">Total</div><div class="v" id="totV">0:00</div><div class="s" id="totS"></div></div>
+    <div class="clock" id="drift"><div class="k">Drift</div><div class="v" id="driftV">0:00</div><div class="s" id="driftS">on plan</div></div>
+  </div>
+  <div id="beatBar"><div id="beatFill"></div></div>
+  <main>
+    <div class="phase"><span id="phase"></span><button id="back">&larr; all walkthroughs</button></div>
+    <div class="do"><div class="num" id="num"></div><div class="txt" id="txt"></div></div>
+    <div class="saywrap" id="say"></div>
+    <div id="gate">Hold &mdash; clock still under 10:00. Stretch the closing line.</div>
+    <div class="foot2">
+      <span class="rest" id="restLbl">Next</span>
+      <span class="next"><span class="n" id="nextN"></span> <span id="nextT"></span></span>
+      <span class="pace" id="pace"></span>
+    </div>
+  </main>
+  <footer>
+    <div><kbd>space</kbd> start/pause &nbsp; <kbd>&rarr;</kbd> next &nbsp; <kbd>&larr;</kbd> back &nbsp;
+         <kbd>[</kbd> <kbd>]</kbd> speed &nbsp; <kbd>A</kbd> auto &nbsp; <kbd>R</kbd> reset &nbsp;
+         <kbd>esc</kbd> menu</div>
+    <div><span id="state" class="pause">PAUSED</span> &nbsp;&middot;&nbsp;
+         <span id="wpmLbl"></span> &nbsp;&middot;&nbsp; auto <span id="auto">off</span></div>
+  </footer>
+  <div id="touch">
+    <button id="tBack" aria-label="Previous beat">&larr;</button>
+    <button id="tPlay" class="wide">Start</button>
+    <button id="tNext" aria-label="Next beat">&rarr;</button>
+    <button id="tSlow" class="sm" aria-label="Slower">&minus;</button>
+    <button id="tFast" class="sm" aria-label="Faster">+</button>
+  </div>
+</div>
+
+<script>
+const TASKS = [{"id": "p01_ic50", "title": "Dose-response, IC50 of two inhibitors", "group": "GraphPad Prism", "apps": ["Safari", "Numbers", "GraphPad Prism", "Preview"], "beats": [["SETUP", 1, "Hold on the recorder window 3 s, then say the UTC time", 18, ["It is *[read the UTC clock — hours, minutes and seconds]*, coordinated universal time.", "// before you press Start: Accessibility Inspector running, window closed, dot under its Dock icon", "// Insightful running and minimised · Do Not Disturb on · desktop empty · no disk images mounted", "// only Prism, Numbers, Preview, Safari, Notes may open all run - everything else quit", "// let the recorder window sit visible ~3 s so the description and app list are on film"]], ["SETUP", 2, "The opening — what you are doing and the route through it", 36, ["I'm a molecular biologist, today on the pharmacology side.", "The screening group sent viability data for two kinase inhibitors. I need to know which is *more potent*, and whether that difference is *real*.", "So: their brief in *Preview*, the raw readings in *Numbers*, dose-response curves fitted in *Prism*, and I give them back the IC50s and the statistics."]], ["SETUP", 3, "Notes — type the five-line plan", 28, ["First I write the plan down, so I can hold myself to it.", "Read the brief. Look up the equation. Paste the data. Fit the curves. Fill the sheet. Zip it up.", "// type it, don't paste - five short lines is enough"]], ["SETUP", 4, "Finder — open p01_ic50, name the three files", 30, ["In *Finder*, in my Documents, I open the folder *p zero one ic fifty*, because everything for this lives there.", "Three files: the *brief* as a PDF, the *raw readings* as a CSV, and an empty *summary sheet* I have to send back."]], ["SETUP", 5, "Preview — brief.pdf, read the three asks aloud", 32, ["I double-click *brief dot p d f* so it opens in *Preview*, to see exactly what they want.", "Three asks. The *IC50* for each drug with its confidence interval. How much *more potent* is one than the other.", "And is the difference *real*, or could it be noise?"]], ["SETUP", 6, "Open Safari, Prism, Numbers from the Dock — one reason each", 28, ["From the *Dock*: *Safari*, to check how the dose-response equation is meant to be set up.", "*GraphPad Prism*, because that is where I fit the curves and read off the IC50s.", "And *Numbers*, for the raw data and for the summary sheet they want back."]], ["SETUP", 7, "Say UTC again, minimise Notes", 16, ["It is now *[read the UTC clock again]*. The plan is written, everything I need is open, so I will get into the data.", "// minimise Notes with the yellow button - this timestamp is the boundary, work time is measured from here"]], ["SAFARI", 8, "Google \"graphpad log inhibitor dose response variable slope\"", 30, ["In *Safari* I search *graphpad log inhibitor dose response variable slope*, and click GraphPad's *own* guide in the results.", "I want their wording for the equation parameters before I build the table."]], ["SAFARI", 9, "Read the four parameters, then close Safari", 26, ["Four parameters: *Top* is viability with no drug at all. *Bottom* is viability once the drug saturates.", "*LogIC50* is the dose halfway between them. *Hill slope* is how steeply the curve falls.", "// close the Safari window with the red button before moving on - nothing should sit behind Numbers"]], ["NUMBERS", 10, "Open viability_assay.csv from the folder, describe its shape", 38, ["Back in the folder, I double-click *viability assay dot c s v*, and it opens in *Numbers*.", "*Nine* doses, from one to ten thousand nanomolar, ten-fold steps. *Three* wells each for *PKI-42* and *PKI-77*.", "The values are *percent viability*, normalized already — so I expect Top to land near one hundred."]], ["NUMBERS", 11, "Select the six data columns only, say \"Command C\"", 22, ["I drag across the *six data columns only*, leaving the dose column out, because Prism supplies its own X labels.", "*Command C* to copy."]], ["PRISM", 12, "Welcome dialog: XY > 2 replicate values side by side > Create", 30, ["In *Prism*'s welcome window I pick *XY*, because I have dose in X and viability in Y.", "Then *enter two replicate values in side-by-side subcolumns*, because each group has *three wells* but I'm not doing ANOVA.", "*Create*. A dose-response fit needs replicates so Prism builds error bars."]], ["PRISM", 13, "Click cell X1, say \"Command V\"", 22, ["I click cell *X one*, top left of the sheet, and *Command V*.", "Fifty-four values land in six subcolumns. Nothing shifted."]], ["PRISM", 14, "Rename Group A and B to PKI-42 and PKI-77", 26, ["Column *A* and its partner I title *PKI-42*, column *B* and its partner *PKI-77*, so the graph legend reads right later.", "Down the row titles I type the dose values from the CSV, one through ten thousand."]], ["PRISM", 15, "Analyze > Transform, set X = Log(X), OK", 30, ["*Analyze*, at the top. *Transform*, then *Normalize and Transform*.", "Tick *Transform X values*, and set *X equals Log of X*. My doses go ten-fold each step.", "*OK*. A new sheet appears."]], ["PRISM", 16, "On transformed sheet: Analyze > Nonlinear regression", 42, ["The transformed sheet has X in log units now. *Analyze*. *Nonlinear regression*, the curve fitting function.", "For the model, *Dose-response*, then *Inhibition*, because the drug *kills cells*.", "Then *log inhibitor versus response, variable slope*, four parameters — Prism fits the steepness itself rather than assuming it."]], ["PRISM", 17, "Compare tab: tick LogIC50, then OK", 26, ["On the *Compare* tab I tick *Do the best-fit values of unshared parameters differ?*", "And I tick *LogIC50*, because that is the question: are the IC50s different? *OK*."]], ["RESULTS", 18, "Read the IC50s, confidence intervals, and Hill slopes", 30, ["The results sheet opens. *PKI-42* IC50 is *forty nanomolar*, confidence interval *thirty-six to forty-five*.", "*PKI-77* is *two hundred eighty nanomolar*, confidence interval *two hundred forty-eight to three hundred sixteen*.", "Hill slopes: *minus nought point nine five* and *minus one point two one*. Both negative, as they must be — inhibitors."]], ["RESULTS", 19, "Read R squared and F test results", 28, ["*R squared* is *nought point nine nine seven* and *nought point nine nine six* — the curves run through the data.", "The *F test*: *P below nought point nought nought nought one*. The seven-fold gap is *real*."]], ["RESULTS", 20, "Explain the fold difference and the test", 26, ["Two hundred eighty divided by forty is *about seven*. PKI-42 needs seven times less drug for the same effect — it is *more potent*.", "The confidence intervals do not overlap, and the F test agrees: the difference is real."]], ["PRISM", 21, "Graphs > transformed data, format with two colours, axis titles", 36, ["In the left panel under *Graphs* I click *transformed data*, and choose *scatter plot with a line*, with *mean and SD* bars.", "*PKI-42* in *blue*, *PKI-77* in *orange*, so the two curves read apart at a glance.", "I double-click each axis title: *log concentration nM* across, *Viability percent of untreated* up."]], ["PRISM", 22, "File > Export the graph as ic50_curves.pdf", 22, ["*File*, *Export*, *P D F*, into the p zero one ic fifty folder, named *ic fifty curves*.", "The fitted curves are locked down."]], ["PRISM", 23, "Go to results sheet, export as ic50_results.pdf", 22, ["I click the *regression results* sheet tab, and export that too, as *ic fifty results*, so the numbers travel with the picture."]], ["NUMBERS", 24, "Minimise Prism, open ic50_summary.xlsx, explain grey vs yellow", 38, ["I minimise *Prism* — I am done with it, and I do not want it sitting behind what I am typing in.", "In the folder I open *ic fifty summary dot x l s x*. It came *attached to their brief*.", "*Grey* cells are theirs. *Yellow* is mine to fill."]], ["NUMBERS", 25, "Fill in the IC50s, confidence intervals, and Hill slopes for each drug", 34, ["Top row, *PKI-42*. IC50: *forty*. CI: *thirty-six to forty-five*. Hill slope: *minus nought point nine five*.", "Second row, *PKI-77*. IC50: *two hundred eighty*. CI: *two hundred forty-eight to three hundred sixteen*. Hill slope: *minus one point two one*."]], ["NUMBERS", 26, "Fill R squared and Verdict dropdown columns", 30, ["*R squared* for both: *nought point nine nine seven* and *nought point nine nine six*.", "The *Verdict* column is a dropdown. For PKI-42, I click and pick *Take forward*. For PKI-77, *Deprioritise*."]], ["NUMBERS", 27, "Fold difference and F test p-value", 22, ["*Fold difference*: *seven*.", "*F test P*: *below nought point nought nought nought one*."]], ["NUMBERS", 28, "Type the conclusion line", 22, ["At the bottom, the conclusion: *PKI-42 is about seven times more potent. The difference is real, F test p-value below zero point zero zero zero one.*"]], ["NUMBERS", 29, "File > Export To > PDF", 22, ["*File*, *Export To*, *P D F*, and I point it at the p zero one ic fifty folder."]], ["PREVIEW", 30, "ic50_curves.pdf > markup > arrows and labels at IC50s", 32, ["I open *ic fifty curves dot p d f* in *Preview*, and click the *markup* button in the toolbar — the pen tip.", "An *arrow* pointing at the halfway point on the *PKI-42* curve — that is the IC50.", "Text beside it: *IC50 forty nanomolar*."]], ["PREVIEW", 31, "Mark up second curve and export as PNG", 28, ["A second *arrow* at the halfway point on the *PKI-77* curve.", "Text: *IC50 two hundred eighty nanomolar*.", "*File*, *Export*, format *P N G*, named *ic fifty curves annotated*."]], ["FINISH", 32, "Finder — select the four exports > Compress", 24, ["Back in *Finder*. Four files came out of this: the *curves*, the *results table*, the *filled sheet*, and the *annotated image*.", "I select all four, right-click, *Compress four items*."]], ["FINISH", 33, "Rename deliverables.zip, closing line, hold on recorder window", 42, ["I rename the archive *deliverables dot zip*.", "So: *PKI-42* needs *forty nanomolar* to halve viability. *PKI-77* needs *two hundred eighty*.", "That is about *seven times* more drug for the same effect — *PKI-42* is the one worth taking forward.", "The F test says the difference is *real*. Both fits are *clean*.", "// pause 2-3 s on the recorder window before you press Stop, or the last seconds get cut"]]]}, {"id": "p02_growth", "title": "Growth curves, two-way ANOVA in Prism", "group": "GraphPad Prism", "apps": ["Safari", "Numbers", "GraphPad Prism", "Preview"], "beats": [["SETUP", 1, "Hold on the recorder window 3 s, then say the UTC time", 18, ["It is *[read the UTC clock — hours, minutes and seconds]*, coordinated universal time.", "// before you press Start: Accessibility Inspector running, window closed, dot under its Dock icon", "// Insightful running and minimised · Do Not Disturb on · desktop empty · no disk images mounted", "// only Prism, Numbers, Preview, Safari, Notes may open all run - everything else quit", "// let the recorder window sit visible ~3 s so the description and app list are on film"]], ["SETUP", 2, "The opening — what you are doing and the route through it", 36, ["The microbiology group has sent me seven hours of growth readings, with and without a low dose of antibiotic.", "I need to know whether the drug *slows growth*, and *from what hour*.", "So: their brief in *Preview*, the readings in *Numbers*, a *two-way ANOVA* in *Prism*, and they get back the curve, the statistics and their filled sheet."]], ["SETUP", 3, "Notes — type the five-line plan", 28, ["First I write the plan down, so I can hold myself to it.", "Read the brief. Check how the two-way ANOVA works. Run it in Prism. Fill the sheet. Zip it up.", "// type it, don't paste - five short lines is enough"]], ["SETUP", 4, "Finder — open p02_growth, name the three files", 30, ["In *Finder*, in my Documents, I open the folder *p zero two growth*, because everything for this lives there.", "Three files: the *brief* as a PDF, the *raw readings* as a CSV, and an empty *summary sheet* I have to send back."]], ["SETUP", 5, "Preview — brief.pdf, read the three asks aloud", 32, ["I double-click *brief dot p d f* so it opens in *Preview*, to see exactly what they want.", "Three asks. Does the antibiotic change growth at all. From *what point in time* the difference appears.", "And no *t-test at every hour* — they were told off for that last time."]], ["SETUP", 6, "Open Safari, Prism, Numbers from the Dock — one reason each", 28, ["From the *Dock*: *Safari*, to check how the test is meant to be set up.", "*GraphPad Prism*, because that is where the ANOVA and the curve get made.", "And *Numbers*, for the readings and for the sheet they want back."]], ["SETUP", 7, "Say UTC again, minimise Notes", 16, ["It is now *[read the UTC clock again]*. The plan is written, everything I need is open, so I will get into the data.", "// minimise Notes with the yellow button - this timestamp is the boundary, work time is measured from here"]], ["SAFARI", 8, "Google \"graphpad two-way anova\", open GraphPad's own guide", 30, ["In *Safari* I search *graphpad two-way anova*, and click GraphPad's *own* guide in the results.", "I want their wording for how the table has to be arranged before I build it."]], ["SAFARI", 9, "Read the interaction definition, then close the Safari window", 26, ["Two factors here: *time*, and *treatment*. The *interaction* is the one I care about.", "A significant interaction means the drug's effect *depends on when you look*, which is what a slow-down looks like.", "// close the Safari window with the red button before moving on - nothing should sit behind Numbers"]], ["NUMBERS", 10, "Open growth_curve.csv from the folder, describe its shape", 40, ["Back in the folder, I double-click *growth curve dot c s v*, and it opens in *Numbers*.", "*Eight* rows, hour zero to hour seven. *Six* data columns: three control flasks, three treated.", "*O D six hundred* is optical density — how cloudy the culture is, standing in for how many cells there are."]], ["NUMBERS", 11, "Select the six data columns only, say \"Command C\"", 22, ["I drag across the *six data columns only*, leaving the hour column out, because Prism supplies its own row labels.", "*Command C* to copy."]], ["PRISM", 12, "Welcome dialog: Grouped > 3 replicate values side by side > Create", 30, ["In *Prism*'s welcome window I pick *Grouped*, on the left.", "Then *enter three replicate values in side-by-side subcolumns*, because each group is *three separate flasks*.", "*Create*. Grouped is what makes the two-way ANOVA available — an X Y table would not."]], ["PRISM", 13, "Click cell A1, say \"Command V\"", 22, ["I click cell *A one*, top left of the sheet, and *Command V*.", "Forty-eight values land in six subcolumns. Nothing shifted."]], ["PRISM", 14, "Name the columns Control and Treated, rows 0 h to 7 h", 26, ["Column *A* I title *Control*, column *B* *Treated*, so the graph legend is right later.", "Down the row titles I type *zero h* through *seven h*."]], ["PRISM", 15, "Analyze > Two-way ANOVA > no matching or pairing", 30, ["*Analyze*, at the top of the sheet. *Two-way ANOVA*, then OK.", "*No matching or pairing* — these are *separate flasks* at every hour, not one flask followed through."]], ["PRISM", 16, "Multiple comparisons within each row, Options > Šídák", 42, ["On the *Multiple Comparisons* tab: *compare each cell mean with the other cell mean in that row* — control against treated, hour by hour.", "On *Options*, the *Šídák* correction. That is eight comparisons at once, and uncorrected, one of them flukes sooner or later.", "That is exactly what the brief asked me not to do."]], ["PRISM", 17, "Residuals tab — residual plot + normality test, then OK", 26, ["Before I trust a single P value, the *Residuals* tab. I tick *plot the residuals*, and *test residuals for normality*.", "The ANOVA assumes the scatter is even and roughly normal. If it is not, the P values underneath are not worth much. *OK*."]], ["RESULTS", 18, "Read the % of total variation: time 63, drug 24", 26, ["The results sheet splits the variation three ways. *Time*, *sixty-three percent* — bacteria grow, no surprise.", "*Treatment*, *twenty-four percent*. So the drug matters overall."]], ["RESULTS", 19, "Interaction 12 %, F = 111, P < 0.0001", 44, ["*Interaction*, *twelve percent*, F of a hundred and eleven, P below *nought point nought nought nought one*.", "That is the answer to their first question. A drug that shifted everything by the same amount would give an interaction of *zero*.", "Twelve percent means the gap *widens hour by hour*. Residual is half a percent — my three flasks agree."]], ["RESULTS", 20, "Šídák rows: 0 and 1 ns, hour 2 onward ****", 34, ["Scrolling to the comparisons. Hour *zero*, not significant. Hour *one*, not significant — the two groups start the same.", "Hour *two*: *four stars*, adjusted P of nought point nought nought nought nought five.", "And every hour after that, four stars. So their second answer is *hour two*."]], ["RESULTS", 21, "Residual plot + normality result — say whether the model holds", 44, ["Now back to the residuals. The plot is an *even band* either side of zero, with *no funnel* opening to the right.", "And the normality test on the residuals gives P of *[read the value]*, which is *[above / below]* nought point nought five.", "So the model fits the data, and the P values I just read stand up.", "// if normality fails, say so out loud - the design is balanced with equal n, which makes ANOVA tolerant. Never hide it"]], ["PRISM", 22, "Graphs > Data 1: points + line, mean/SD, two colours, axis titles", 36, ["In the left panel under *Graphs* I click *Data 1*, and choose *points with a connecting line*, with *mean and S D* bars.", "Control in *blue*, treated in *orange*, so the two curves read apart at a glance.", "I double-click each axis title: *Time in hours* across, *O D six hundred* up."]], ["PRISM", 23, "Double-click Y axis > Log scale, read it, then back to Linear", 42, ["One more look before I export. I double-click the *Y axis* and switch the scale to *log two*.", "Growth is exponential, so a log axis *straightens* it out, and the *slope* becomes the growth rate.", "The treated line is not just lower — it is *shallower*. A slower doubling, not a delayed start.", "Then I set the scale back to *linear*, because that is the picture they asked for."]], ["PRISM", 24, "Export the graph, then the ANOVA sheet, as PDFs", 30, ["*File*, *Export*, *P D F*, into the p zero two growth folder, named *growth curves*.", "Then I click the *ANOVA results* sheet and export that too, as *growth anova*, so the numbers travel with the picture."]], ["NUMBERS", 25, "Minimise Prism, open growth_summary.xlsx, explain grey vs yellow", 38, ["I minimise *Prism* — I am done with it, and I do not want it sitting behind what I am typing in.", "In the folder I open *growth summary dot x l s x*. It came *attached to their brief*.", "*Grey* cells are theirs. *Yellow* is mine to fill."]], ["NUMBERS", 26, "Type the difference for each hour", 34, ["Difference column, hour by hour, straight off the Prism comparisons.", "Nought point nought nought four. Nought point nought five one. Nought point one five two. Nought point three five two.", "Nought point five five one. Nought point six six eight. Nought point seven two four. Nought point six eight four."]], ["NUMBERS", 27, "Adjusted P column, then the Significant? dropdown per row", 34, ["Adjusted P beside each one — *greater than nought point nine nine* at hour zero, *nought point five* at hour one, then *below nought point nought nought nought one*.", "The *Significant* column is a dropdown: *no* for the first two rows, *yes* for the six after."]], ["NUMBERS", 28, "Three note lines at the bottom", 28, ["Three lines at the bottom, so they can read it without me.", "The interaction is significant, so the effect *builds* rather than being there from the start.", "The curves separate at *hour two*. The treated culture plateaus at about *half* the control's density."]], ["NUMBERS", 29, "File > Export To > PDF, into the task folder", 22, ["*File*, *Export To*, *P D F*, and I point it at the p zero two growth folder.", "// check the sheet you export is the FILLED one - Numbers likes to save a .numbers copy into Documents instead"]], ["PREVIEW", 30, "growth_curves.pdf > markup > arrow at hour 2 + label", 32, ["I open *growth curves dot p d f* in *Preview*, and click the *markup* button in the toolbar — the pen tip.", "An *arrow* pointing at *hour two*, where the two curves come apart.", "Text beside it: *curves separate, hour two, P below nought point nought nought nought one*."]], ["PREVIEW", 31, "File > Export as PNG", 22, ["*File*, *Export*, format *P N G*, named *growth curves annotated*, so the marked-up version is a picture they can drop into a slide."]], ["FINISH", 32, "Finder — select the four exports > Compress", 24, ["Back in *Finder*. Four files came out of this: the *curve*, the *ANOVA table*, the *filled sheet*, and the *annotated image*.", "I select all four, right-click, *Compress four items*."]], ["FINISH", 33, "Rename deliverables.zip, closing line, hold on the recorder window", 42, ["I rename the archive *deliverables dot zip*.", "So: the antibiotic *does* slow growth — twenty-four percent of the variation, and P below nought point nought nought nought one.", "The effect *builds* rather than being there from the start. That is the significant interaction.", "It becomes significant at *hour two*, and the treated culture finishes at about *half* the control's density.", "// pause 2-3 s on the recorder window before you press Stop, or the last seconds get cut"]]]}];
+const GROUPS = ["GraphPad Prism", "Molecular biology", "Outdoors and cycling", "Gaming, tech and making"];
+const SETUP_BEATS = 7;
+const TASK_FLOOR = 600;
+const PAUSE_LINE = 0.8;
+let wpm = 110;
+
+const $ = id => document.getElementById(id);
+const mmss = s => { s = Math.max(0, Math.round(s));
+  return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0"); };
+const words = l => l.replace(/\*/g,"").trim().split(/\s+/).filter(Boolean);
+const isNote = l => l.startsWith("// ");
+
+function planOf(t){
+  let setup = 0, task = 0;
+  t.beats.forEach((b, k) => { k < SETUP_BEATS ? setup += b[3] : task += b[3]; });
+  return {setup, task, total: setup + task};
+}
+
+/* ---------- menu ---------- */
+function drawMenu(){
+  const m = $("menu"); m.innerHTML = "";
+  const h = document.createElement("h1");
+  h.textContent = TASKS.length + " walkthroughs";
+  m.appendChild(h);
+  GROUPS.forEach(g => {
+    const list = TASKS.filter(t => t.group === g);
+    if(!list.length) return;
+    const sec = document.createElement("div"); sec.className = "grp";
+    const h2 = document.createElement("h2"); h2.textContent = g; sec.appendChild(h2);
+    const grid = document.createElement("div"); grid.className = "grid";
+    list.forEach(t => {
+      const p = planOf(t);
+      const b = document.createElement("button"); b.className = "card";
+      b.innerHTML = '<span class="id"></span><span class="ti"></span><span class="mt"></span>';
+      b.querySelector(".id").textContent = t.id;
+      b.querySelector(".ti").textContent = t.title;
+      b.querySelector(".mt").textContent =
+        mmss(p.task) + " of work · " + mmss(p.setup) + " opening · " + t.apps.join(", ");
+      b.onclick = () => open_(t);
+      grid.appendChild(b);
+    });
+    sec.appendChild(grid); m.appendChild(sec);
+  });
+}
+
+/* ---------- prompter ---------- */
+let T = null, BEATS = [], planEnd = [], planTotal = 0, planSetup = 0;
+let i = 0, running = false, tTotal = 0, tBeat = 0, last = null, scale = 1, autoNext = false;
+let lineEls = [], lineWordEls = [], lineDur = [], lineStart = [], speechTotal = 0;
+let setupEndedAt = null, wake = null;
+
+function open_(t){
+  T = t; BEATS = t.beats;
+  planEnd = []; BEATS.reduce((a,b,k) => planEnd[k] = a + b[3], 0);
+  planTotal = planEnd[planEnd.length-1];
+  planSetup = planEnd[SETUP_BEATS-1];
+  i = 0; tTotal = 0; tBeat = 0; running = false; setupEndedAt = null; last = null;
+  $("menu").style.display = "none"; $("run").classList.add("on");
+  $("state").textContent = "PAUSED"; $("state").className = "pause";
+  $("tPlay").textContent = "Start"; $("tPlay").classList.remove("run");
+  $("totS").textContent = "plan " + mmss(planTotal);
+  $("taskS").textContent = "starts at beat " + (SETUP_BEATS + 1);
+  location.hash = t.id;
+  buildBeat(); render();
+}
+function toMenu(){
+  running = false; wakeOff();
+  $("run").classList.remove("on"); $("menu").style.display = "flex";
+  location.hash = "";
+}
+
+function buildBeat(){
+  const say = BEATS[i][4], wrap = $("say");
+  wrap.innerHTML = ""; lineEls = []; lineWordEls = []; lineDur = []; lineStart = []; speechTotal = 0;
+  say.forEach(raw => {
+    const div = document.createElement("div");
+    if(isNote(raw)){ div.className = "sayline q"; div.textContent = raw.slice(3);
+                     wrap.appendChild(div); return; }
+    div.className = "sayline ahead";
+    const spans = [];
+    raw.split(/(\*[^*]+\*)/).filter(Boolean).forEach(chunk => {
+      const em = chunk.startsWith("*") && chunk.endsWith("*");
+      const host = em ? document.createElement("em") : div;
+      words(chunk).forEach(w => {
+        const s = document.createElement("span");
+        s.className = "w"; s.textContent = w + " ";
+        host.appendChild(s); spans.push(s);
+      });
+      if(em) div.appendChild(host);
+    });
+    wrap.appendChild(div);
+    lineEls.push(div); lineWordEls.push(spans);
+    const d = spans.length / wpm * 60 + PAUSE_LINE;
+    lineStart.push(speechTotal); lineDur.push(d); speechTotal += d;
+  });
+  wrap.style.fontSize = scale + "em";
+}
+
+function paint(){
+  for(let l = 0; l < lineEls.length; l++){
+    const st = lineStart[l], en = st + lineDur[l];
+    const live = tBeat >= st && tBeat < en, done = tBeat >= en;
+    lineEls[l].className = "sayline " + (live ? "live" : done ? "done" : "ahead");
+    const n = lineWordEls[l].length;
+    const cut = done ? n : live ? Math.floor((tBeat - st) / (lineDur[l] - PAUSE_LINE) * n) : 0;
+    lineWordEls[l].forEach((s, k) => {
+      s.className = "w" + (k < cut ? " said" : k === cut && live ? " now" : "");
+    });
+  }
+}
+
+function planSetupActual(){ return setupEndedAt === null ? planSetup : setupEndedAt; }
+
+function render(){
+  if(!T) return;
+  const [ph, n, tx, sec] = BEATS[i];
+  $("phase").innerHTML = T.id + " &middot; " + ph + " <b>&middot; beat " + n + " of " + BEATS.length + "</b>";
+  $("num").textContent = String(n).padStart(2,"0");
+  $("txt").textContent = tx;
+  paint();
+  $("pace").innerHTML = "speech <b>" + mmss(speechTotal) + "</b> at " + wpm
+    + " wpm &middot; beat allows <b>" + sec + "s</b>";
+  const nx = BEATS[i+1];
+  $("restLbl").textContent = nx ? "Next" : "";
+  $("nextN").textContent = nx ? String(nx[1]).padStart(2,"0") : "";
+  $("nextT").textContent = nx ? nx[2] : "— end of run —";
+  $("beatV").textContent = mmss(sec - tBeat);
+  $("beatS").textContent = "planned " + mmss(sec);
+  $("beatFill").style.width = Math.min(100, tBeat / sec * 100) + "%";
+  $("beatFill").classList.toggle("over", tBeat > sec);
+  const task = Math.max(0, tTotal - planSetupActual());
+  const cleared = task >= TASK_FLOOR;
+  $("taskV").textContent = i < SETUP_BEATS ? "—" : mmss(task);
+  $("taskClock").classList.toggle("cleared", cleared);
+  $("taskS").textContent = i < SETUP_BEATS ? "starts at beat " + (SETUP_BEATS+1)
+    : (cleared ? "floor cleared" : "floor 10:00 — " + mmss(TASK_FLOOR - task) + " to go");
+  $("totV").textContent = mmss(tTotal);
+  const d = tTotal - (i > 0 ? planEnd[i-1] : 0) - tBeat;
+  $("driftV").textContent = (d >= 0 ? "+" : "-") + mmss(Math.abs(d));
+  $("driftV").className = "v " + (d > 8 ? "behind" : d < -8 ? "ahead" : "");
+  $("driftS").textContent = Math.abs(d) <= 8 ? "on plan" : d > 0 ? "behind plan" : "ahead of plan";
+  $("gate").classList.toggle("show", i === BEATS.length-1 && !cleared);
+  $("wpmLbl").textContent = wpm + " wpm";
+}
+
+async function wakeOn(){ try{ if("wakeLock" in navigator && !wake) wake = await navigator.wakeLock.request("screen"); }catch(e){} }
+async function wakeOff(){ try{ if(wake){ await wake.release(); wake = null; } }catch(e){} }
+addEventListener("visibilitychange", () => { if(document.visibilityState === "visible" && running) wakeOn(); });
+
+function tick(ts){
+  if(running && T){
+    if(last !== null){ const dt = (ts - last)/1000; tTotal += dt; tBeat += dt; }
+    last = ts;
+    if(autoNext && tBeat > speechTotal + 1.5 && i < BEATS.length-1) go(1); else render();
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+function go(step){
+  const to = i + step;
+  if(to < 0 || to >= BEATS.length) return;
+  if(step > 0 && i === SETUP_BEATS-1 && setupEndedAt === null) setupEndedAt = tTotal;
+  if(step < 0 && to === SETUP_BEATS-1) setupEndedAt = null;
+  i = to; tBeat = 0; buildBeat(); render();
+}
+function toggle(){
+  running = !running; last = null;
+  $("state").textContent = running ? "RUNNING" : "PAUSED";
+  $("state").className = running ? "run" : "pause";
+  $("tPlay").textContent = running ? "Pause" : "Start";
+  $("tPlay").classList.toggle("run", running);
+  running ? wakeOn() : wakeOff();
+}
+function speed(d){ wpm = Math.min(180, Math.max(70, wpm + d)); buildBeat(); render(); }
+
+$("tPlay").onclick = toggle;
+$("tBack").onclick = () => go(-1);
+$("tNext").onclick = () => go(1);
+$("tSlow").onclick = () => speed(-5);
+$("tFast").onclick = () => speed(5);
+$("back").onclick = toMenu;
+
+addEventListener("keydown", e => {
+  if(!T || !$("run").classList.contains("on")) return;
+  if(e.code === "Space"){ e.preventDefault(); toggle(); }
+  else if(e.code === "ArrowRight") go(1);
+  else if(e.code === "ArrowLeft") go(-1);
+  else if(e.code === "Escape") toMenu();
+  else if(e.key === "[") speed(-5);
+  else if(e.key === "]") speed(5);
+  else if(e.key.toLowerCase() === "a"){
+    autoNext = !autoNext;
+    $("auto").textContent = autoNext ? "on" : "off";
+    $("auto").className = autoNext ? "on" : "";
+  }
+  else if(e.key === "+" || e.key === "="){ scale = Math.min(1.6, scale + .08); $("say").style.fontSize = scale + "em"; }
+  else if(e.key === "-"){ scale = Math.max(.6, scale - .08); $("say").style.fontSize = scale + "em"; }
+  else if(e.key.toLowerCase() === "r"){ open_(T); }
+});
+
+drawMenu();
+const want = TASKS.find(t => t.id === location.hash.slice(1));
+if(want) open_(want);
+</script>
+</body>
+</html>
