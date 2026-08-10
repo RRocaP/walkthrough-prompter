@@ -1,0 +1,9 @@
+{
+  "name": "Reference",
+  "short_name": "Reference",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#0b0e13",
+  "theme_color": "#0b0e13"
+}
